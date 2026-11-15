@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>音ゲーリズム＆テンポチェッカー | Rhythm & Tempo Visualizer</title>
+  <meta name="description" content="音ゲーマーのためのBPM・n分音符リズム可視化＆再生ツール。テンポ、打鍵間隔(ms)、打/秒(NPS)の計算と、縦落ち・横スクロールでのリアルタイム表示・打鍵練習。">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=Rajdhani:wght@600;700&family=Noto+Sans+JP:wght@400;500;700&family=Fira+Code:wght@500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="app-container">
+    <!-- Header -->
+    <header class="app-header">
+      <div class="logo-area">
+        <span class="logo-badge">RHYTHM GAME TOOL</span>
+        <h1>BEAT <span class="accent-text">CHRONO</span></h1>
+        <p class="subtitle">音ゲー用 BPM × n分音符 リズム＆テンポ可視化チェッカー</p>
+      </div>
+      <div class="header-stats">
+        <div class="stat-pill">
+          <span class="label">NOTE INTERVAL</span>
+          <span class="value" id="statInterval">125.0 <small>ms</small></span>
+        </div>
+        <div class="stat-pill">
+          <span class="label">SPEED</span>
+          <span class="value" id="statNps">8.00 <small>打/秒 (NPS)</small></span>
+        </div>
+      </div>
+    </header>
+
+    <!-- Main Grid Layout -->
+    <main class="main-layout">
+      <!-- Left: Settings & Pattern Panel -->
+      <section class="control-panel glass-panel">
+        <div class="panel-header">
+          <h2><i class="icon">⚙</i> パラメータ設定</h2>
+          <button id="tapTempoBtn" class="btn btn-outline" title="リズムに合わせてタップしてBPMを測定">
+            <span class="tap-icon">👆</span> TAP BPM (<span id="tapCount">0</span>)
+          </button>
+        </div>
+
+        <!-- BPM Input -->
+        <div class="form-group">
+          <div class="label-row">
+            <label for="bpmInput">BPM (テンポ)</label>
+            <div class="quick-bpm-btns">
+              <button class="btn-chip" data-bpm-delta="-10">-10</button>
+              <button class="btn-chip" data-bpm-delta="-1">-1</button>
+              <button class="btn-chip" data-bpm-delta="1">+1</button>
+              <button class="btn-chip" data-bpm-delta="10">+10</button>
+            </div>
+          </div>
+          <div class="input-with-slider">
+            <input type="number" id="bpmInput" min="20" max="600" value="150" step="1">
+            <input type="range" id="bpmSlider" min="30" max="320" value="150" step="1">
+          </div>
+        </div>
+
+        <!-- Division (n-th Note) Selection -->
+        <div class="form-group">
+          <div class="label-row">
+            <label>音符の細かさ (n分音符)</label>
+            <span class="division-badge" id="divisionDesc">16分音符 (1拍4打)</span>
+          </div>
+          <div class="division-buttons" id="divisionButtons">
+            <button class="btn-div" data-div="4">4分</button>
+            <button class="btn-div" data-div="6">6分</button>
+            <button class="btn-div" data-div="8">8分</button>
+            <button class="btn-div" data-div="12">12分 (3連)</button>
+            <button class="btn-div active" data-div="16">16分</button>
+            <button class="btn-div" data-div="24">24分 (6連)</button>
+            <button class="btn-div" data-div="32">32分</button>
+            <button class="btn-div" data-div="48">48分</button>
+            <button class="btn-div" data-div="64">64分</button>
+            <button class="btn-div" data-custom="true" id="customDivBtn">カスタム</button>
+          </div>
+          <div class="custom-div-input hidden" id="customDivGroup">
+            <input type="number" id="customDivInput" min="1" max="128" value="16" placeholder="n">
+            <span>分音符</span>
+          </div>
+        </div>
+
+        <!-- Time Signature & Speed -->
+        <div class="form-row">
+          <div class="form-group col-half">
+            <label for="timeSigSelect">拍子 (小節区切り)</label>
+            <select id="timeSigSelect">
+              <option value="4" selected>4 / 4 拍子</option>
+              <option value="3">3 / 4 拍子</option>
+              <option value="2">2 / 4 拍子</option>
+              <option value="6">6 / 8 拍子 (2拍系)</option>
+              <option value="5">5 / 4 拍子</option>
+              <option value="7">7 / 4 拍子</option>
+            </select>
+          </div>
+          <div class="form-group col-half">
+            <label for="speedSlider">落下/スクロール速度 (<span id="speedVal">1.0x</span>)</label>
+            <input type="range" id="speedSlider" min="0.5" max="3.0" step="0.1" value="1.0">
+          </div>
+        </div>
+
+        <!-- Audio Settings -->
+        <div class="panel-sub-section">
+          <h3><i class="icon">🔊</i> 音声＆サウンド</h3>
+          <div class="form-row">
+            <div class="form-group col-half">
+              <label for="soundSelect">音色タイプ</label>
+              <select id="soundSelect">
+                <option value="arcade" selected>Arcade Perfect (音ゲー風クリック)</option>
+                <option value="laser">Cyber Laser (シンセレーザー)</option>
+                <option value="taiko">Taiko (和太鼓ドン/カッ)</option>
+                <option value="metronome">Digital Metronome (電子メトロノーム)</option>
+                <option value="woodblock">Woodblock (木魚)</option>
+                <option value="kick_snare">Kick & Snare (ドラム)</option>
+              </select>
+            </div>
+            <div class="form-group col-half">
+              <label for="volumeSlider">マスター音量 (<span id="volumeVal">80%</span>)</label>
+              <input type="range" id="volumeSlider" min="0" max="100" value="80">
+            </div>
+          </div>
+          <div class="checkbox-row">
+            <label class="toggle-checkbox">
+              <input type="checkbox" id="accentBeatCheck" checked>
+              <span class="checkmark"></span>
+              拍の頭（1拍目/各拍）にアクセント音をつける
+            </label>
+            <label class="toggle-checkbox">
+              <input type="checkbox" id="subBeatMetronomeCheck">
+              <span class="checkmark"></span>
+              4分メトロノームを背景で鳴らす
+            </label>
+          </div>
+        </div>
+
+        <!-- Rhythm Pattern Sequencer -->
+        <div class="panel-sub-section">
+          <div class="label-row">
+            <h3><i class="icon">🎹</i> 1小節リズムパターン (ON/OFF)</h3>
+            <div class="preset-dropdown-wrap">
+              <select id="patternPresetSelect">
+                <option value="all">全埋め (均等連打)</option>
+                <option value="offbeat">裏拍のみ (Offbeat)</option>
+                <option value="dotted">付点8分 (シャッフル)</option>
+                <option value="gallop">乱打/ガロップ (タタッ・タタッ)</option>
+                <option value="hocket">交互打ち (1つ飛ばし)</option>
+                <option value="first_half">前半連打</option>
+              </select>
+            </div>
+          </div>
+          <div class="sequencer-container">
+            <div class="sequencer-grid" id="sequencerGrid">
+              <!-- Dynamically generated checkboxes/buttons -->
+            </div>
+          </div>
+          <div class="sequencer-actions">
+            <button class="btn-micro" id="seqAllOn">すべてON</button>
+            <button class="btn-micro" id="seqInvert">反転</button>
+            <button class="btn-micro" id="seqClear">クリア</button>
+          </div>
+        </div>
+
+        <!-- Master Play / Stop Controller -->
+        <div class="playback-controls">
+          <button id="playBtn" class="btn btn-primary btn-large">
+            <span class="play-icon">▶</span> <span class="play-text">PLAY / START</span>
+          </button>
+          <button id="resetBtn" class="btn btn-secondary">
+            <span>↺</span> リセット
+          </button>
+        </div>
+      </section>
+
+      <!-- Right: Visualizer & Rhythm Game Playground -->
+      <section class="visualizer-panel glass-panel">
+        <div class="visualizer-header">
+          <div class="view-mode-tabs">
+            <button class="tab-btn active" data-mode="vertical">
+              <span class="tab-icon">↓</span> 縦落ち (Beatmania/プロセカ風)
+            </button>
+            <button class="tab-btn" data-mode="horizontal">
+              <span class="tab-icon">→</span> 横スクロール (太鼓/Muse Dash風)
+            </button>
+            <button class="tab-btn" data-mode="circle">
+              <span class="tab-icon">◎</span> サークル (maimai/メトロノーム風)
+            </button>
+          </div>
+
+          <div class="view-options">
+            <label class="toggle-checkbox compact">
+              <input type="checkbox" id="alternateLaneCheck" checked>
+              <span class="checkmark"></span>
+              2レーン交互振り分け (トリル表示)
+            </label>
+          </div>
+        </div>
+
+        <!-- Visualizer Canvas Container -->
+        <div class="canvas-wrapper" id="canvasWrapper">
+          <canvas id="visualizerCanvas"></canvas>
+
+          <!-- Judgment feedback banner -->
+          <div class="judgment-overlay" id="judgmentOverlay">
+            <div class="judgment-text" id="judgmentText">READY</div>
+            <div class="timing-delta" id="timingDelta">+0.0 ms</div>
+          </div>
+
+          <!-- Metronome Ring / Beat Pulse indicator -->
+          <div class="beat-indicator" id="beatIndicator">
+            <div class="beat-dot" data-beat="1"></div>
+            <div class="beat-dot" data-beat="2"></div>
+            <div class="beat-dot" data-beat="3"></div>
+            <div class="beat-dot" data-beat="4"></div>
+          </div>
+        </div>
+
+        <!-- Interactive Practice Area -->
+        <div class="practice-area">
+          <div class="practice-info">
+            <span class="badge-tag">PRACTICE MODE</span>
+            <p>画面の「TAP」ボタン、またはキーボードの <strong>[ SPACE ]</strong> / <strong>[ D ]</strong> <strong>[ K ]</strong> キーでノーツに合わせて叩いてリズム感をチェック！</p>
+          </div>
+          <div class="practice-buttons">
+            <button class="tap-target-btn btn-left" id="tapKeyLeft">
+              <span class="key-hint">[ D ]</span>
+              <span class="tap-label">TAP L</span>
+            </button>
+            <button class="tap-target-btn btn-center" id="tapKeySpace">
+              <span class="key-hint">[ SPACE ]</span>
+              <span class="tap-label">TAP</span>
+            </button>
+            <button class="tap-target-btn btn-right" id="tapKeyRight">
+              <span class="key-hint">[ K ]</span>
+              <span class="tap-label">TAP R</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Speed / Difficulty Reference Table -->
+        <div class="reference-info-box">
+          <div class="ref-item">
+            <span class="ref-title">打鍵間隔:</span>
+            <span class="ref-data" id="refIntervalMs">125.00 ms</span>
+          </div>
+          <div class="ref-item">
+            <span class="ref-title">1秒間の打鍵数 (NPS):</span>
+            <span class="ref-data" id="refNps">8.00 打/秒</span>
+          </div>
+          <div class="ref-item">
+            <span class="ref-title">難易度・スピード目安:</span>
+            <span class="ref-data badge-tier" id="refTier">中速 (標準的な16分連打)</span>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <!-- Footer -->
+    <footer class="app-footer">
+      <div class="footer-content">
+        <p>BEAT CHRONO - Rhythm Game Tempo & Division Visualizer | Built for GitHub Pages</p>
+        <p class="shortcuts-hint">ショートカット: <strong>[Space]</strong> 再生/停止・打鍵練習 | <strong>[T]</strong> Tap BPM | <strong>[↑/↓]</strong> BPM調整</p>
+      </div>
+    </footer>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
