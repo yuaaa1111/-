@@ -2,9 +2,10 @@
 
 音ゲーマー（プロセカ、Arcaea、チュウニズム、beatmania IIDX、SDVX、太鼓の達人など）のための、テンポ・リズム可視化＆打鍵タイミング確認Webアプリケーションです。
 
+AI感謝
 ---
 
-## 🎮 主な機能
+## 主な機能
 
 1. **BPM & n分音符のリアルタイム設定**
    - **BPM自由設定**: 20〜600まで細かく調整可能
@@ -36,33 +37,7 @@
    - 判定ラインとのズレ（±ms）をリアルタイムに計算し、**PERFECT / GREAT / GOOD / EARLY / LATE** を表示
    - **TAP BPM**: リズムに合わせてタップしてBPMを逆算測定
 
----
-
-## 🚀 GitHub Pagesでの公開手順
-
-このリポジトリをGitHubにプッシュするだけで、誰でも無料でWebサイトとして公開できます。
-
-### 1. Gitの初期化とプッシュ
-```bash
-git init
-git add .
-git commit -m "feat: Initial commit for BEAT CHRONO"
-git branch -M main
-git remote add origin https://github.com/<あなたのユーザー名>/<リポジトリ名>.git
-git push -u origin main
-```
-
-### 2. GitHub Pagesの有効化
-1. GitHubのリポジトリページを開きます。
-2. 上部メニューの **Settings** をクリックします。
-3. 左サイドバーの **Pages** をクリックします。
-4. **Build and deployment** の **Source** で **Deploy from a branch** を選択します。
-5. **Branch** で `main`（または `master`）の `/ (root)` を選択し、**Save** をクリックします。
-6. 1〜2分後、発行されたURL（例: `https://<ユーザー名>.github.io/<リポジトリ名>/`）にアクセスすればサイトが公開されます！
-
----
-
-## ⌨️ キーボードショートカット
+##  キーボードショートカット
 
 | キー | 動作 |
 |---|---|
